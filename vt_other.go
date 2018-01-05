@@ -1,9 +1,11 @@
+// +build plan9 nacl windows
+
 package terminal
 
 import (
 	"bufio"
 	"bytes"
-	"github.com/kr/pty"
+	"errors"
 	"io"
 	"os"
 	"os/exec"
@@ -23,17 +25,7 @@ type VT struct {
 // and a new pty file by starting the *exec.Command. The returned
 // *os.File is the pty file.
 func Start(state *State, cmd *exec.Cmd) (*VT, *os.File, error) {
-	var err error
-	t := &VT{
-		dest: state,
-	}
-	t.pty, err = pty.Start(cmd)
-	if err != nil {
-		return nil, nil, err
-	}
-	t.rc = t.pty
-	t.init()
-	return t, t.pty, nil
+	return nil, nil, errors.New("Unsupported operating system")
 }
 
 // Create initializes a virtual terminal emulator with the target state

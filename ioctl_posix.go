@@ -1,3 +1,5 @@
+// +build linux darwin dragonfly solaris openbsd netbsd freebsd
+
 package terminal
 
 import (
