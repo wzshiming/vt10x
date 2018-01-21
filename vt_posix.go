@@ -11,7 +11,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kr/pty"
+	"github.com/zyedidia/pty"
 )
 
 // VT represents the virtual terminal emulator.
