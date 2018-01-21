@@ -25,12 +25,12 @@ type VT struct {
 // Start initializes a virtual terminal emulator with the target state
 // and a new pty file by starting the *exec.Command. The returned
 // *os.File is the pty file.
-func Start(state *State, cmd *exec.Cmd) (*VT, *os.File, error) {
+func Start(state *State, cmd *exec.Cmd, buf *bytes.Buffer) (*VT, *os.File, error) {
 	var err error
 	t := &VT{
 		dest: state,
 	}
-	t.pty, err = pty.Start(cmd)
+	t.pty, err = pty.Start(cmd, buf)
 	if err != nil {
 		return nil, nil, err
 	}
