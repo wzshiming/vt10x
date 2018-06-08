@@ -1,4 +1,4 @@
-package terminal
+package vt10x
 
 func isControlCode(c rune) bool {
 	return c < 0x20 || c == 0177

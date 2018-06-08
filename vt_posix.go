@@ -1,68 +1,42 @@
 // +build linux darwin dragonfly solaris openbsd netbsd freebsd
 
-package terminal
+package vt10x
 
 import (
 	"bufio"
 	"bytes"
 	"io"
-	"os"
-	"os/exec"
 	"unicode"
 	"unicode/utf8"
-
-	"github.com/zyedidia/pty"
 )
 
 // VT represents the virtual terminal emulator.
 type VT struct {
 	dest *State
-	rc   io.ReadCloser
+	rwc  io.ReadWriteCloser
 	br   *bufio.Reader
-	pty  *os.File
-}
-
-// Start initializes a virtual terminal emulator with the target state
-// and a new pty file by starting the *exec.Command. The returned
-// *os.File is the pty file.
-func Start(state *State, cmd *exec.Cmd, buf *bytes.Buffer) (*VT, *os.File, error) {
-	var err error
-	t := &VT{
-		dest: state,
-	}
-	t.pty, err = pty.Start(cmd, buf)
-	if err != nil {
-		return nil, nil, err
-	}
-	t.rc = t.pty
-	t.init()
-	return t, t.pty, nil
 }
 
 // Create initializes a virtual terminal emulator with the target state
-// and io.ReadCloser input.
-func Create(state *State, rc io.ReadCloser) (*VT, error) {
+// and io.ReadWriteCloser input.
+func Create(state *State, rwc io.ReadWriteCloser) (*VT, error) {
 	t := &VT{
 		dest: state,
-		rc:   rc,
+		rwc:  rwc,
 	}
 	t.init()
 	return t, nil
 }
 
 func (t *VT) init() {
-	t.br = bufio.NewReader(t.rc)
+	t.br = bufio.NewReader(t.rwc)
+	t.dest.w = t.rwc
 	t.dest.numlock = true
 	t.dest.state = t.dest.parse
 	t.dest.cur.attr.fg = DefaultFG
 	t.dest.cur.attr.bg = DefaultBG
 	t.Resize(80, 24)
 	t.dest.reset()
-}
-
-// File returns the pty file.
-func (t *VT) File() *os.File {
-	return t.pty
 }
 
 // Write parses input and writes terminal changes to state.
@@ -93,9 +67,9 @@ func (t *VT) Write(p []byte) (int, error) {
 	return written, nil
 }
 
-// Close closes the pty or io.ReadCloser.
+// Close closes the io.ReadWriteCloser.
 func (t *VT) Close() error {
-	return t.rc.Close()
+	return t.rwc.Close()
 }
 
 // Parse blocks on read on pty or io.ReadCloser, then parses sequences until
@@ -150,5 +124,4 @@ func (t *VT) Resize(cols, rows int) {
 	t.dest.lock()
 	defer t.dest.unlock()
 	_ = t.dest.resize(cols, rows)
-	t.ptyResize()
 }

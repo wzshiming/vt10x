@@ -1,6 +1,6 @@
 // +build plan9 nacl windows
 
-package terminal
+package vt10x
 
 import (
 	"os"
@@ -10,6 +10,6 @@ func ioctl(f *os.File, cmd, p uintptr) error {
 	return nil
 }
 
-func (t *VT) ptyResize() error {
+func ResizePty(*os.File) error {
 	return nil
 }

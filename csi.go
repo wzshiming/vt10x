@@ -1,6 +1,7 @@
-package terminal
+package vt10x
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -162,6 +163,13 @@ func (t *State) handleCSI() {
 		t.setMode(c.priv, true, c.args)
 	case 'm': // SGR - terminal attribute (color)
 		t.setAttr(c.args)
+	case 'n':
+		switch c.arg(0, 0) {
+		case 5: // DSR - device status report
+			t.w.Write([]byte("\033[0n"))
+		case 6: // CPR - cursor position report
+			t.w.Write([]byte(fmt.Sprintf("\033[%d;%dR", t.cur.y+1, t.cur.x+1)))
+		}
 	case 'r': // DECSTBM - set scrolling region
 		if c.priv {
 			goto unknown

@@ -1,6 +1,6 @@
 // +build linux darwin dragonfly solaris openbsd netbsd freebsd
 
-package terminal
+package vt10x
 
 import (
 	"os"
@@ -20,15 +20,12 @@ func ioctl(f *os.File, cmd, p uintptr) error {
 	return nil
 }
 
-func (t *VT) ptyResize() error {
-	if t.pty == nil {
-		return nil
-	}
+func ResizePty(pty *os.File, cols, rows int) error {
 	var w struct{ row, col, xpix, ypix uint16 }
-	w.row = uint16(t.dest.rows)
-	w.col = uint16(t.dest.cols)
-	w.xpix = 16 * uint16(t.dest.cols)
-	w.ypix = 16 * uint16(t.dest.rows)
-	return ioctl(t.pty, syscall.TIOCSWINSZ,
+	w.row = uint16(rows)
+	w.col = uint16(cols)
+	w.xpix = 16 * uint16(cols)
+	w.ypix = 16 * uint16(rows)
+	return ioctl(pty, syscall.TIOCSWINSZ,
 		uintptr(unsafe.Pointer(&w)))
 }

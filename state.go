@@ -1,6 +1,7 @@
-package terminal
+package vt10x
 
 import (
+	"io"
 	"log"
 	"sync"
 )
@@ -82,6 +83,7 @@ type parseState func(c rune)
 type State struct {
 	DebugLogger *log.Logger
 
+	w             io.Writer
 	mu            sync.Mutex
 	changed       ChangeFlag
 	cols, rows    int
