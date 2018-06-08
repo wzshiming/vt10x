@@ -31,7 +31,7 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/james4k/termbox-go-noinput"
+  name = "github.com/gdamore/tcell"
 
 [[constraint]]
   name = "github.com/kr/pty"

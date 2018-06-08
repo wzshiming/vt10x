@@ -15,15 +15,37 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/james4k/termbox-go-noinput"
+  name = "github.com/gdamore/encoding"
   packages = ["."]
-  revision = "a9fdc7395c40d5458ef066238c5a8f1c2555ee4b"
+  revision = "b23993cbb6353f0e6aa98d0ee318a34728f628b9"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/gdamore/tcell"
+  packages = [
+    ".",
+    "termbox",
+    "terminfo"
+  ]
+  revision = "b3cebc399d6f98536af845ed8a5144ab586f6759"
 
 [[projects]]
   name = "github.com/kr/pty"
   packages = ["."]
   revision = "282ce0e5322c82529687d609ee670fac7c7d917c"
   version = "v1.1.1"
+
+[[projects]]
+  name = "github.com/lucasb-eyer/go-colorful"
+  packages = ["."]
+  revision = "345fbb3dbcdb252d9985ee899a84963c0fa24c82"
+  version = "v1.0"
+
+[[projects]]
+  name = "github.com/mattn/go-runewidth"
+  packages = ["."]
+  revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
+  version = "v0.0.2"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -55,9 +77,21 @@
   ]
   revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
 
+[[projects]]
+  name = "golang.org/x/text"
+  packages = [
+    "encoding",
+    "encoding/internal/identifier",
+    "internal/gen",
+    "transform",
+    "unicode/cldr"
+  ]
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9fd0f06750a09fcde13458a3938c1bd3a5709cdf79f87dc72162ef008283cf5d"
+  inputs-digest = "e69f1c365e6a10edd745ff10288a3477d610993be77eda6099cbeb1160b3d4a4"
   solver-name = "gps-cdcl"
   solver-version = 1
