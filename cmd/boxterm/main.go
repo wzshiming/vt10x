@@ -85,12 +85,12 @@ func main() {
 		case <-endc:
 			return
 		case <-updatec:
-			update(term, &state, wide-2, tall-2)
+			update(&state, wide-2, tall-2)
 		}
 	}
 }
 
-func update(term *vt10x.VT, state *vt10x.State, w, h int) {
+func update(state *vt10x.State, w, h int) {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	for i := 0; i < h+2; i++ {
 		termbox.SetCell(0, i, '│', termbox.ColorDefault, termbox.ColorDefault)
