@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	expect "github.com/Netflix/go-expect"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -88,23 +87,12 @@ type Coord struct {
 }
 
 func TestVTCPR(t *testing.T) {
-	c, err := expect.NewConsole()
+	c, err := NewVT10XConsole()
 	require.NoError(t, err)
 	defer c.Close()
 
-	var state State
-	term, err := Create(&state, c)
-	require.NoError(t, err)
-	defer term.Close()
-
 	go func() {
-		for {
-			err := term.Parse()
-			if err != nil {
-				t.Log(err)
-				break
-			}
-		}
+		c.ExpectEOF()
 	}()
 
 	coord, err := cpr(c.Tty())
