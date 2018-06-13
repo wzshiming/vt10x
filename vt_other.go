@@ -31,7 +31,7 @@ func Create(state *State, rwc io.ReadWriteCloser) (*VT, error) {
 }
 
 func (t *VT) init() {
-	t.br = bufio.NewReader(t.rc)
+	t.br = bufio.NewReader(t.rwc)
 	t.dest.w = t.rwc
 	t.dest.numlock = true
 	t.dest.state = t.dest.parse
