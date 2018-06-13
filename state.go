@@ -707,3 +707,23 @@ func (t *State) setTitle(title string) {
 	t.changed |= ChangedTitle
 	t.title = title
 }
+
+func (t *State) Size() (rows int, cols int) {
+	return t.rows, t.cols
+}
+
+func (t *State) String() string {
+	t.Lock()
+	defer t.Unlock()
+
+	var view []rune
+	for y := 0; y < t.rows; y++ {
+		for x := 0; x < t.cols; x++ {
+			c, _, _ := t.Cell(x, y)
+			view = append(view, c)
+		}
+		view = append(view, '\n')
+	}
+
+	return string(view)
+}
