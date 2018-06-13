@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/Netflix/go-expect"
   packages = ["."]
-  revision = "1e4b8211271a0ff83dac2426fdad8e216470783f"
+  revision = "3af4993359780dc8fcc5f5fce8ffc3a096ae5cb1"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -24,7 +24,6 @@
   name = "github.com/gdamore/tcell"
   packages = [
     ".",
-    "termbox",
     "terminfo"
   ]
   revision = "b3cebc399d6f98536af845ed8a5144ab586f6759"
@@ -92,6 +91,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e69f1c365e6a10edd745ff10288a3477d610993be77eda6099cbeb1160b3d4a4"
+  inputs-digest = "5e1527d1bbcd3630b5977352847c235f29f0b643584cd84080c637dd2784d208"
   solver-name = "gps-cdcl"
   solver-version = 1

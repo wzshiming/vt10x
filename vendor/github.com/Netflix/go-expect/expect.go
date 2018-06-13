@@ -11,50 +11,34 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-// Package expect provides an expect-like interface to automate control of
-// applications. It is unlike expect in that it does not spawn or manage
-// process lifecycle. This package only focuses on expecting output and sending
-// input through it's psuedoterminal.
 package expect
 
 import (
+	"bufio"
 	"bytes"
 	"io"
-	"io/ioutil"
-	"os"
-	"strings"
-	"time"
+	"unicode/utf8"
 )
 
-// ExpectOpt allows setting Expect options.
-type ExpectOpt func(*ExpectOpts) error
-
-// ExpectOpts provides additional options on Expect.
-type ExpectOpts struct {
-	Timeout time.Duration
+// ExpectString reads from Console's tty until the provided string is read or
+// an error occurs, and returns the buffer read by Console.
+func (c *Console) ExpectString(s string) (string, error) {
+	return c.Expect(String(s))
 }
 
-// WithTimeout sets the deadline for Expect.
-// A zero value for timouet means Read will not time out.
-//
-// An error returned after a timeout fails will implement the
-// Timeout method, and calling the Timeout method will return true.
-// The PathError and SyscallError types implement the Timeout method.
-// In general, call IsTimeout to test whether an error indicates a timeout.
-func WithTimeout(timeout time.Duration) ExpectOpt {
-	return func(opts *ExpectOpts) error {
-		opts.Timeout = timeout
-		return nil
-	}
+// ExpectEOF reads from Console's tty until EOF or an error occurs, and returns
+// the buffer read by Console.
+func (c *Console) ExpectEOF() (string, error) {
+	return c.Expect(EOF)
 }
 
-// Expect reads from Console's tty until s is encountered and returns the
-// buffer read by Console. No extra bytes are read once a match is found, so if
-// a program isn't expecting input yet it will be blocked. Sends are queued up
-// so the next Expect will read the remaining bytes (i.e. rest of prompt) or
-// ExpectEOF if nothing else is expected.
-func (c *Console) Expect(s string, opts ...ExpectOpt) (string, error) {
+// Expect reads from Console's tty until a condition specified from opts is
+// encountered or an error occurs, and returns the buffer read by console.
+// No extra bytes are read once a condition is met, so if a program isn't
+// expecting input yet, it will be blocked. Sends are queued up in tty's
+// internal buffer so that the next Expect will read the remaining bytes (i.e.
+// rest of prompt) as well as its conditions.
+func (c *Console) Expect(opts ...ExpectOpt) (string, error) {
 	var options ExpectOpts
 	for _, opt := range opts {
 		if err := opt(&options); err != nil {
@@ -62,89 +46,44 @@ func (c *Console) Expect(s string, opts ...ExpectOpt) (string, error) {
 		}
 	}
 
-	var r io.ReadCloser
-	if options.Timeout == 0 {
-		r = c.ptm
-	} else {
-		var err error
-		r, err = readerWithDeadline(c.ptm, options.Timeout)
-		if err != nil {
-			return "", err
-		}
-		defer r.Close()
-	}
-
 	buf := new(bytes.Buffer)
-	w := io.MultiWriter(append(c.opts.Stdouts, buf)...)
+	writer := io.MultiWriter(append(c.opts.Stdouts, buf)...)
+	runeWriter := bufio.NewWriterSize(writer, utf8.UTFMax)
 
 	var content string
 	for {
-		p := make([]byte, 1)
-		n, err := r.Read(p)
+		r, _, err := c.runeReader.ReadRune()
 		if err != nil {
-			return "", err
+			if options.EOF && err == io.EOF {
+				break
+			}
+			return buf.String(), err
 		}
 
-		_, err = w.Write(p[:n])
+		c.Logf("expect read: %q", string(r))
+		_, err = runeWriter.WriteRune(r)
 		if err != nil {
-			return "", err
+			return buf.String(), err
 		}
 
-		content = buf.String()
-		// Replace with KMP table.
-		if strings.Contains(content, s) {
+		// Immediately flush rune to the underlying writers.
+		err = runeWriter.Flush()
+		if err != nil {
+			return buf.String(), err
+		}
+
+		matchFound := false
+		for _, matcher := range options.Matchers {
+			if matcher.Match(buf) {
+				matchFound = true
+				break
+			}
+		}
+
+		if matchFound {
 			break
 		}
 	}
 
 	return content, nil
-}
-
-func readerWithDeadline(r io.Reader, timeout time.Duration) (io.ReadCloser, error) {
-	rp, wp, err := os.Pipe()
-	if err != nil {
-		return nil, err
-	}
-
-	err = rp.SetReadDeadline(time.Now().Add(timeout))
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		io.Copy(wp, r)
-	}()
-
-	return rp, nil
-}
-
-// ExpectEOF reads out the Console's tty until EOF or an error occurs. If
-// Console has multiple stdouts, the bytes read from the tty are written to all
-// stdouts.
-func (c *Console) ExpectEOF(opts ...ExpectOpt) (int64, error) {
-	var options ExpectOpts
-	for _, opt := range opts {
-		if err := opt(&options); err != nil {
-			return 0, err
-		}
-	}
-
-	var r io.ReadCloser
-	if options.Timeout == 0 {
-		r = c.ptm
-	} else {
-		var err error
-		r, err = readerWithDeadline(c.ptm, options.Timeout)
-		if err != nil {
-			return 0, err
-		}
-		defer r.Close()
-	}
-
-	if len(c.opts.Stdouts) == 0 {
-		return io.Copy(ioutil.Discard, r)
-	}
-
-	w := io.MultiWriter(c.opts.Stdouts...)
-	return io.Copy(w, r)
 }

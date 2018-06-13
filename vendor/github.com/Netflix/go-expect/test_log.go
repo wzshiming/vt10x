@@ -3,6 +3,7 @@ package expect
 import (
 	"bufio"
 	"io"
+	"strings"
 	"testing"
 )
 
@@ -53,4 +54,24 @@ type testWriter struct {
 func (tw testWriter) Write(p []byte) (n int, err error) {
 	tw.t.Log(string(p))
 	return len(p), nil
+}
+
+// StripTrailingEmptyLines returns a copy of s stripped of trailing lines that
+// consist of only space characters.
+func StripTrailingEmptyLines(out string) string {
+	lines := strings.Split(out, "\n")
+	if len(lines) < 2 {
+		return out
+	}
+
+	for i := len(lines) - 1; i >= 0; i-- {
+		stripped := strings.Replace(lines[i], " ", "", -1)
+		if len(stripped) == 0 {
+			lines = lines[:len(lines)-1]
+		} else {
+			break
+		}
+	}
+
+	return strings.Join(lines, "\n")
 }

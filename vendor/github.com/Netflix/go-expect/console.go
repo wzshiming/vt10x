@@ -14,9 +14,13 @@
 package expect
 
 import (
+	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
+	"unicode/utf8"
 
 	"github.com/kr/pty"
 )
@@ -26,10 +30,11 @@ import (
 // input back on it's tty. Console can also multiplex other sources of input
 // and multiplex its output to other writers.
 type Console struct {
-	opts    ConsoleOpts
-	ptm     *os.File
-	pts     *os.File
-	closers []io.Closer
+	opts       ConsoleOpts
+	ptm        *os.File
+	pts        *os.File
+	runeReader *bufio.Reader
+	closers    []io.Closer
 }
 
 // ConsoleOpt allows setting Console options.
@@ -37,6 +42,7 @@ type ConsoleOpt func(*ConsoleOpts) error
 
 // ConsoleOpts provides additional options on creating a Console.
 type ConsoleOpts struct {
+	Logger  *log.Logger
 	Stdins  []io.Reader
 	Stdouts []io.Writer
 	Closers []io.Closer
@@ -73,9 +79,21 @@ func WithCloser(closer ...io.Closer) ConsoleOpt {
 	}
 }
 
+// WithLogger adds a logger for Console to log debugging information to. By
+// default Console will discard logs.
+func WithLogger(logger *log.Logger) ConsoleOpt {
+	return func(opts *ConsoleOpts) error {
+		opts.Logger = logger
+		return nil
+	}
+}
+
 // NewConsole returns a new Console with the given options.
 func NewConsole(opts ...ConsoleOpt) (*Console, error) {
-	var options ConsoleOpts
+	options := ConsoleOpts{
+		Logger: log.New(ioutil.Discard, "", 0),
+	}
+
 	for _, opt := range opts {
 		if err := opt(&options); err != nil {
 			return nil, err
@@ -89,15 +107,19 @@ func NewConsole(opts ...ConsoleOpt) (*Console, error) {
 	closers := append(options.Closers, pts, ptm)
 
 	c := &Console{
-		opts:    options,
-		ptm:     ptm,
-		pts:     pts,
-		closers: closers,
+		opts:       options,
+		ptm:        ptm,
+		pts:        pts,
+		runeReader: bufio.NewReaderSize(ptm, utf8.UTFMax),
+		closers:    closers,
 	}
 
 	for _, r := range options.Stdins {
 		go func(r io.Reader) {
-			io.Copy(c, r)
+			_, err := io.Copy(c, r)
+			if err != nil {
+				c.Logf("failed to copy stdin: %s", err)
+			}
 		}(r)
 	}
 
@@ -118,23 +140,40 @@ func (c *Console) Read(b []byte) (int, error) {
 
 // Write writes bytes b to Console's tty.
 func (c *Console) Write(b []byte) (int, error) {
+	c.Logf("console write: %q", b)
 	return c.ptm.Write(b)
 }
 
 // Close closes Console's tty. Calling Close will unblock Expect and ExpectEOF.
 func (c *Console) Close() error {
 	for _, fd := range c.closers {
-		fd.Close()
+		err := fd.Close()
+		if err != nil {
+			c.Logf("failed to close: %s", err)
+		}
 	}
 	return nil
 }
 
 // Send writes string s to Console's tty.
 func (c *Console) Send(s string) (int, error) {
+	c.Logf("console send: %q", s)
 	return c.ptm.WriteString(s)
 }
 
 // SendLine writes string s to Console's tty with a trailing newline.
 func (c *Console) SendLine(s string) (int, error) {
 	return c.Send(fmt.Sprintf("%s\n", s))
+}
+
+// Log prints to Console's logger.
+// Arguments are handled in the manner of fmt.Print.
+func (c *Console) Log(v ...interface{}) {
+	c.opts.Logger.Print(v...)
+}
+
+// Logf prints to Console's logger.
+// Arguments are handled in the manner of fmt.Printf.
+func (c *Console) Logf(format string, v ...interface{}) {
+	c.opts.Logger.Printf(format, v...)
 }
