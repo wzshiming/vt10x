@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/Netflix/go-expect"
   packages = ["."]
-  revision = "3af4993359780dc8fcc5f5fce8ffc3a096ae5cb1"
+  revision = "c93bf25de8e869da25cf26bcd2932b36141f61ae"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
