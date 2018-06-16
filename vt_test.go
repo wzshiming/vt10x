@@ -87,7 +87,7 @@ type Coord struct {
 }
 
 func TestVTCPR(t *testing.T) {
-	c, err := NewVT10XConsole()
+	c, _, err := NewVT10XConsole()
 	require.NoError(t, err)
 	defer c.Close()
 
