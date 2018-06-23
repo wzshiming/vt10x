@@ -20,13 +20,20 @@ func main() {
 }
 
 func goterm() error {
-	var state vt10x.State
 	cmd := exec.Command(os.Getenv("SHELL"), "-i")
 	ptm, err := pty.Start(cmd)
 	if err != nil {
 		return err
 	}
 
+	// f, err := os.OpenFile("debug.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	// if err != nil {
+	// 	return err
+	// }
+	// state := vt10x.State{
+	// 	DebugLogger: log.New(f, "", log.LstdFlags),
+	// }
+	var state vt10x.State
 	term, err := vt10x.Create(&state, ptm)
 	if err != nil {
 		return err
@@ -99,8 +106,17 @@ func update(s tcell.Screen, state *vt10x.State, w, h int) {
 	defer state.Unlock()
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
-			c, fg, _ := state.Cell(x, y)
-			s.SetContent(x, y, c, nil, tcell.StyleDefault.Foreground(tcell.Color(fg)).Background(tcell.ColorWhite))
+			c, fg, bg := state.Cell(x, y)
+
+			style := tcell.StyleDefault
+			if fg != vt10x.DefaultFG {
+				style = style.Foreground(tcell.Color(fg))
+			}
+			if bg != vt10x.DefaultBG {
+				style = style.Background(tcell.Color(bg))
+			}
+
+			s.SetContent(x, y, c, nil, style)
 		}
 	}
 	if state.CursorVisible() {
