@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -31,19 +32,15 @@ func run() error {
 	c.Stdin = pts
 	c.Stderr = pts
 
-	var state vt10x.State
-	term, err := vt10x.Create(&state, ptm)
-	if err != nil {
-		return err
-	}
-	defer term.Close()
+	term := vt10x.New(vt10x.WithWriter(ptm))
 
-	rows, cols := state.Size()
+	rows, cols := term.Size()
 	vt10x.ResizePty(ptm, cols, rows)
 
 	go func() {
+		br := bufio.NewReader(ptm)
 		for {
-			err := term.Parse()
+			err := term.Parse(br)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				break
@@ -57,6 +54,6 @@ func run() error {
 	}
 
 	time.Sleep(time.Second)
-	fmt.Println(state.String())
+	fmt.Println(term.String())
 	return nil
 }

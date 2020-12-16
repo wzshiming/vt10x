@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -33,12 +34,7 @@ func goterm() error {
 	// state := vt10x.State{
 	// 	DebugLogger: log.New(f, "", log.LstdFlags),
 	// }
-	var state vt10x.State
-	term, err := vt10x.Create(&state, ptm)
-	if err != nil {
-		return err
-	}
-	defer term.Close()
+	term := vt10x.New(vt10x.WithWriter(ptm))
 
 	s, err := tcell.NewScreen()
 	if err != nil {
@@ -59,8 +55,9 @@ func goterm() error {
 	updatec := make(chan struct{}, 1)
 	go func() {
 		defer close(endc)
+		br := bufio.NewReader(ptm)
 		for {
-			err := term.Parse()
+			err := term.Parse(br)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				break
@@ -96,17 +93,17 @@ func goterm() error {
 		case <-endc:
 			return nil
 		case <-updatec:
-			update(s, &state, width, height)
+			update(s, term, width, height)
 		}
 	}
 }
 
-func update(s tcell.Screen, state *vt10x.State, w, h int) {
-	state.Lock()
-	defer state.Unlock()
+func update(s tcell.Screen, term vt10x.VT, w, h int) {
+	term.Lock()
+	defer term.Unlock()
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
-			c, fg, bg := state.Cell(x, y)
+			c, fg, bg := term.Cell(x, y)
 
 			style := tcell.StyleDefault
 			if fg != vt10x.DefaultFG {
@@ -119,8 +116,8 @@ func update(s tcell.Screen, state *vt10x.State, w, h int) {
 			s.SetContent(x, y, c, nil, style)
 		}
 	}
-	if state.CursorVisible() {
-		curx, cury := state.Cursor()
+	if term.CursorVisible() {
+		curx, cury := term.Cursor()
 		s.ShowCursor(curx, cury)
 	} else {
 		s.HideCursor()
