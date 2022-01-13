@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func extractStr(term VT, x0, x1, row int) string {
+func extractStr(term Terminal, x0, x1, row int) string {
 	var s []rune
 	for i := x0; i <= x1; i++ {
 		c, _, _ := term.Cell(i, row)
@@ -50,7 +50,7 @@ func TestNewline(t *testing.T) {
 
 	// A newline with a color set should not make the next line that color,
 	// which used to happen if it caused a scroll event.
-	st := (term.(*vt))
+	st := (term.(*terminal))
 	st.moveTo(0, st.rows-1)
 	_, err = term.Write([]byte("\033[1;37m\n$ \033[m"))
 	if err != nil && err != io.EOF {

@@ -7,13 +7,16 @@ import (
 	"io/ioutil"
 )
 
-// VT represents the virtual terminal emulator.
-type VT interface {
+// Terminal represents the virtual terminal emulator.
+type Terminal interface {
 	// Write parses input and writes terminal changes to state.
 	io.Writer
 
 	// String dumps the virtual terminal contents.
 	fmt.Stringer
+
+	// Screen displays the virtual terminal.
+	Screen
 
 	// Parse blocks on read on pty or io.Reader, then parses sequences until
 	// buffer empties. State is locked as soon as first rune is read, and unlocked
@@ -23,6 +26,15 @@ type VT interface {
 	// Resize reports new size to pty and updates state.
 	Resize(cols, rows int)
 
+	// Lock locks the state object's mutex.
+	Lock()
+
+	// Unlock resets change flags and unlocks the state object's mutex.
+	Unlock()
+}
+
+// Screen represents the screen of the virtual terminal emulator.
+type Screen interface {
 	// Size returns the size of the virtual terminal.
 	Size() (rows, cols int)
 
@@ -35,34 +47,28 @@ type VT interface {
 
 	// CursorVisible returns the visible state of the cursor.
 	CursorVisible() bool
-
-	// Lock locks the state object's mutex.
-	Lock()
-
-	// Unlock resets change flags and unlocks the state object's mutex.
-	Unlock()
 }
 
-type VTOption func(*VTInfo)
+type TerminalOption func(*TerminalInfo)
 
-type VTInfo struct {
+type TerminalInfo struct {
 	w io.Writer
 }
 
-func WithWriter(w io.Writer) VTOption {
-	return func(info *VTInfo) {
+func WithWriter(w io.Writer) TerminalOption {
+	return func(info *TerminalInfo) {
 		info.w = w
 	}
 }
 
 // New initializes a virtual terminal emulator with the target state and
 // io.ReadWriter input.
-func New(opts ...VTOption) VT {
-	info := VTInfo{
+func New(opts ...TerminalOption) Terminal {
+	info := TerminalInfo{
 		w: ioutil.Discard,
 	}
 	for _, opt := range opts {
 		opt(&info)
 	}
-	return newVT(info)
+	return newTerminal(info)
 }

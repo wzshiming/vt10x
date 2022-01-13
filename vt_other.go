@@ -10,17 +10,17 @@ import (
 	"unicode/utf8"
 )
 
-type vt struct {
+type terminal struct {
 	*State
 }
 
-func newVT(info VTInfo) *vt {
-	t := &vt{&State{ w: info.w, }}
+func newTerminal(info TerminalInfo) *terminal {
+	t := &terminal{&State{ w: info.w, }}
 	t.init()
 	return t
 }
 
-func (t *vt) init() {
+func (t *terminal) init() {
 	t.numlock = true
 	t.state = t.parse
 	t.cur.attr.fg = DefaultFG
@@ -29,7 +29,7 @@ func (t *vt) init() {
 	t.reset()
 }
 
-func (t *vt) Write(p []byte) (int, error) {
+func (t *terminal) Write(p []byte) (int, error) {
 	var written int
 	r := bytes.NewReader(p)
 	t.lock()
@@ -57,7 +57,7 @@ func (t *vt) Write(p []byte) (int, error) {
 }
 
 // TODO: add tests for expected blocking behavior
-func (t *vt) Parse(br *bufio.Reader) error {
+func (t *terminal) Parse(br *bufio.Reader) error {
 	var locked bool
 	defer func() {
 		if locked {
@@ -100,7 +100,7 @@ func fullRuneBuffered(br *bufio.Reader) bool {
 	return utf8.FullRune(buf)
 }
 
-func (t *vt) Resize(cols, rows int) {
+func (t *terminal) Resize(cols, rows int) {
 	t.lock()
 	defer t.unlock()
 	_ = t.resize(cols, rows)
