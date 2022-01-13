@@ -15,8 +15,8 @@ type Terminal interface {
 	// String dumps the virtual terminal contents.
 	fmt.Stringer
 
-	// Screen displays the virtual terminal.
-	Screen
+	// View displays the virtual terminal.
+	View
 
 	// Parse blocks on read on pty or io.Reader, then parses sequences until
 	// buffer empties. State is locked as soon as first rune is read, and unlocked
@@ -25,16 +25,10 @@ type Terminal interface {
 
 	// Resize reports new size to pty and updates state.
 	Resize(cols, rows int)
-
-	// Lock locks the state object's mutex.
-	Lock()
-
-	// Unlock resets change flags and unlocks the state object's mutex.
-	Unlock()
 }
 
-// Screen represents the screen of the virtual terminal emulator.
-type Screen interface {
+// View represents the view of the virtual terminal emulator.
+type View interface {
 	// Size returns the size of the virtual terminal.
 	Size() (rows, cols int)
 
@@ -47,6 +41,12 @@ type Screen interface {
 
 	// CursorVisible returns the visible state of the cursor.
 	CursorVisible() bool
+
+	// Lock locks the state object's mutex.
+	Lock()
+
+	// Unlock resets change flags and unlocks the state object's mutex.
+	Unlock()
 }
 
 type TerminalOption func(*TerminalInfo)
