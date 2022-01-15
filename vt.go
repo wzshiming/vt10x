@@ -27,7 +27,7 @@ type View interface {
 	fmt.Stringer
 
 	// Size returns the size of the virtual terminal.
-	Size() (rows, cols int)
+	Size() (cols, rows int)
 
 	// Resize changes the size of the virtual terminal.
 	Resize(cols, rows int)

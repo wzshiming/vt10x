@@ -63,7 +63,7 @@ const (
 )
 
 type Glyph struct {
-	Char      rune
+	Char   rune
 	Mode   int16
 	FG, BG Color
 }
@@ -249,7 +249,7 @@ func (t *State) setChar(c rune, attr *Glyph, x, y int) {
 	t.changed |= ChangedScreen
 	t.dirty[y] = true
 	t.lines[y][x] = *attr
-	t.lines[y][x].Char= c
+	t.lines[y][x].Char = c
 	//if t.options.BrightBold && attr.Mode&attrBold != 0 && attr.FG < 8 {
 	if attr.Mode&attrBold != 0 && attr.FG < 8 {
 		t.lines[y][x].FG = attr.FG + 8
@@ -358,7 +358,7 @@ func (t *State) clear(x0, y0, x1, y1 int) {
 		t.dirty[y] = true
 		for x := x0; x <= x1; x++ {
 			t.lines[y][x] = t.cur.Attr
-			t.lines[y][x].Char= ' '
+			t.lines[y][x].Char = ' '
 		}
 	}
 }
@@ -708,8 +708,8 @@ func (t *State) setTitle(title string) {
 	t.title = title
 }
 
-func (t *State) Size() (rows int, cols int) {
-	return t.rows, t.cols
+func (t *State) Size() (cols, rows int) {
+	return t.cols, t.rows
 }
 
 func (t *State) String() string {
