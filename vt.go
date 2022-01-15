@@ -9,28 +9,28 @@ import (
 
 // Terminal represents the virtual terminal emulator.
 type Terminal interface {
-	// Write parses input and writes terminal changes to state.
-	io.Writer
-
-	// String dumps the virtual terminal contents.
-	fmt.Stringer
-
 	// View displays the virtual terminal.
 	View
+
+	// Write parses input and writes terminal changes to state.
+	io.Writer
 
 	// Parse blocks on read on pty or io.Reader, then parses sequences until
 	// buffer empties. State is locked as soon as first rune is read, and unlocked
 	// when buffer is empty.
 	Parse(bf *bufio.Reader) error
-
-	// Resize reports new size to pty and updates state.
-	Resize(cols, rows int)
 }
 
 // View represents the view of the virtual terminal emulator.
 type View interface {
+	// String dumps the virtual terminal contents.
+	fmt.Stringer
+
 	// Size returns the size of the virtual terminal.
 	Size() (rows, cols int)
+
+	// Resize changes the size of the virtual terminal.
+	Resize(cols, rows int)
 
 	// Mode returns the current terminal mode.//
 	Mode() ModeFlag
@@ -67,8 +67,7 @@ func WithWriter(w io.Writer) TerminalOption {
 	}
 }
 
-// New initializes a virtual terminal emulator with the target state and
-// io.ReadWriter input.
+// New returns a new virtual terminal emulator.
 func New(opts ...TerminalOption) Terminal {
 	info := TerminalInfo{
 		w: ioutil.Discard,
