@@ -32,12 +32,18 @@ type View interface {
 	// Size returns the size of the virtual terminal.
 	Size() (rows, cols int)
 
-	// Cell returns the character code, foreground color, and background
-	// color at position (x, y) relative to the top left of the terminal.
-	Cell(x, y int) (ch rune, fg Color, bg Color)
+	// Mode returns the current terminal mode.//
+	Mode() ModeFlag
+
+	// Title represents the title of the console window.
+	Title() string
+
+	// Cell returns the glyph containing the character code, foreground color, and
+	// background color at position (x, y) relative to the top left of the terminal.
+	Cell(x, y int) Glyph
 
 	// Cursor returns the current position of the cursor.
-	Cursor() (x, y int)
+	Cursor() Cursor
 
 	// CursorVisible returns the visible state of the cursor.
 	CursorVisible() bool

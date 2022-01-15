@@ -9,8 +9,8 @@ import (
 func extractStr(term Terminal, x0, x1, row int) string {
 	var s []rune
 	for i := x0; i <= x1; i++ {
-		c, _, _ := term.Cell(i, row)
-		s = append(s, c)
+		attr := term.Cell(i, row)
+		s = append(s, attr.Char)
 	}
 	return string(s)
 }
@@ -56,8 +56,9 @@ func TestNewline(t *testing.T) {
 	if err != nil && err != io.EOF {
 		t.Fatal(err)
 	}
-	_, fg, bg := term.Cell(term.Cursor())
-	if fg != DefaultFG {
-		t.Fatal(st.cur.x, st.cur.y, fg, bg)
+	cur := term.Cursor()
+	attr := term.Cell(cur.X, cur.Y)
+	if attr.FG != DefaultFG {
+		t.Fatal(st.cur.X, st.cur.Y, attr.FG, attr.BG)
 	}
 }

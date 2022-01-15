@@ -23,8 +23,8 @@ func newTerminal(info TerminalInfo) *terminal {
 func (t *terminal) init() {
 	t.numlock = true
 	t.state = t.parse
-	t.cur.attr.fg = DefaultFG
-	t.cur.attr.bg = DefaultBG
+	t.cur.Attr.FG = DefaultFG
+	t.cur.Attr.BG  = DefaultBG
 	t.Resize(80, 24)
 	t.reset()
 }
