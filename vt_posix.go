@@ -16,16 +16,16 @@ type terminal struct {
 
 func newTerminal(info TerminalInfo) *terminal {
 	t := &terminal{&State{w: info.w}}
-	t.init()
+	t.init(info.cols, info.rows)
 	return t
 }
 
-func (t *terminal) init() {
+func (t *terminal) init(cols, rows int) {
 	t.numlock = true
 	t.state = t.parse
 	t.cur.Attr.FG = DefaultFG
 	t.cur.Attr.BG  = DefaultBG
-	t.Resize(80, 24)
+	t.Resize(cols, rows)
 	t.reset()
 }
 

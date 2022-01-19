@@ -58,7 +58,8 @@ type View interface {
 type TerminalOption func(*TerminalInfo)
 
 type TerminalInfo struct {
-	w io.Writer
+	w          io.Writer
+	cols, rows int
 }
 
 func WithWriter(w io.Writer) TerminalOption {
@@ -67,10 +68,19 @@ func WithWriter(w io.Writer) TerminalOption {
 	}
 }
 
+func WithSize(cols, rows int) TerminalOption {
+	return func(info *TerminalInfo) {
+		info.cols = cols
+		info.rows = rows
+	}
+}
+
 // New returns a new virtual terminal emulator.
 func New(opts ...TerminalOption) Terminal {
 	info := TerminalInfo{
-		w: ioutil.Discard,
+		w:    ioutil.Discard,
+		cols: 80,
+		rows: 24,
 	}
 	for _, opt := range opts {
 		opt(&info)
