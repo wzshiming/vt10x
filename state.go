@@ -625,6 +625,14 @@ func (t *State) setAttr(attr []int) {
 				} else {
 					t.logf("bad fgcolor %d\n", attr[i])
 				}
+			} else if i+4 < len(attr) && attr[i+1] == 2 {
+				i += 4
+				r, g, b := attr[i-2], attr[i-1], attr[i]
+				if !between(r, 0, 255) || !between(g, 0, 255) || !between(b, 0, 255) {
+					t.logf("bad fg rgb color (%d,%d,%d)\n", r, g, b)
+				} else {
+					t.cur.Attr.FG = Color(r<<16 | g<<8 | b)
+				}
 			} else {
 				t.logf("gfx attr %d unknown\n", a)
 			}
@@ -637,6 +645,14 @@ func (t *State) setAttr(attr []int) {
 					t.cur.Attr.BG = Color(attr[i])
 				} else {
 					t.logf("bad bgcolor %d\n", attr[i])
+				}
+			} else if i+4 < len(attr) && attr[i+1] == 2 {
+				i += 4
+				r, g, b := attr[i-2], attr[i-1], attr[i]
+				if !between(r, 0, 255) || !between(g, 0, 255) || !between(b, 0, 255) {
+					t.logf("bad bg rgb color (%d,%d,%d)\n", r, g, b)
+				} else {
+					t.cur.Attr.BG = Color(r<<16 | g<<8 | b)
 				}
 			} else {
 				t.logf("gfx attr %d unknown\n", a)
