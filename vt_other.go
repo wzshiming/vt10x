@@ -15,7 +15,7 @@ type terminal struct {
 }
 
 func newTerminal(info TerminalInfo) *terminal {
-	t := &terminal{&State{w: info.w}}
+	t := &terminal{newState(info.w)}
 	t.init(info.cols, info.rows)
 	return t
 }

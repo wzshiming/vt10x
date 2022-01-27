@@ -100,6 +100,14 @@ type State struct {
 	numlock       bool
 	tabs          []bool
 	title         string
+	colorOverride map[Color]Color
+}
+
+func newState(w io.Writer) *State {
+	return &State{
+		w:             w,
+		colorOverride: make(map[Color]Color),
+	}
 }
 
 func (t *State) logf(format string, args ...interface{}) {
@@ -136,7 +144,16 @@ func (t *State) Unlock() {
 // Cell returns the glyph containing the character code, foreground color, and
 // background color at position (x, y) relative to the top left of the terminal.
 func (t *State) Cell(x, y int) Glyph {
-	return t.lines[y][x]
+	cell := t.lines[y][x]
+	fg, ok := t.colorOverride[cell.FG]
+	if ok {
+		cell.FG = fg
+	}
+	bg, ok := t.colorOverride[cell.BG]
+	if ok {
+		cell.BG = bg
+	}
+	return cell
 }
 
 // Cursor returns the current position of the cursor.
