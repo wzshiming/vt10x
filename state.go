@@ -9,13 +9,17 @@ import (
 type AttrFlag uint16
 
 const (
-	AttrReverse AttrFlag = 1 << iota
-	AttrUnderline
-	AttrBold
-	AttrGfx
+	AttrBold AttrFlag = 1 << iota
+	AttrDim
 	AttrItalic
+	AttrUnderline
 	AttrBlink
+	AttrReverse
+	AttrHidden
+	AttrStrike
+
 	AttrWrap
+	AttrGfx
 )
 
 type CursorFlag uint16
@@ -608,21 +612,29 @@ func (t *State) setAttr(attr []int) {
 		a := attr[i]
 		switch a {
 		case 0:
-			t.cur.Attr.Mode &^= AttrReverse | AttrUnderline | AttrBold | AttrItalic | AttrBlink
+			t.cur.Attr.Mode &^= AttrBold | AttrDim | AttrItalic | AttrUnderline | AttrBlink | AttrReverse | AttrHidden | AttrStrike
 			t.cur.Attr.FG = DefaultFG
 			t.cur.Attr.BG = DefaultBG
 		case 1:
 			t.cur.Attr.Mode |= AttrBold
+		case 2:
+			t.cur.Attr.Mode |= AttrDim
 		case 3:
 			t.cur.Attr.Mode |= AttrItalic
 		case 4:
 			t.cur.Attr.Mode |= AttrUnderline
-		case 5, 6: // slow, rapid blink
+		case 5, 6:
 			t.cur.Attr.Mode |= AttrBlink
 		case 7:
 			t.cur.Attr.Mode |= AttrReverse
-		case 21, 22:
+		case 8:
+			t.cur.Attr.Mode |= AttrHidden
+		case 9:
+			t.cur.Attr.Mode |= AttrStrike
+		case 21:
 			t.cur.Attr.Mode &^= AttrBold
+		case 22:
+			t.cur.Attr.Mode &^= AttrDim
 		case 23:
 			t.cur.Attr.Mode &^= AttrItalic
 		case 24:
@@ -631,6 +643,10 @@ func (t *State) setAttr(attr []int) {
 			t.cur.Attr.Mode &^= AttrBlink
 		case 27:
 			t.cur.Attr.Mode &^= AttrReverse
+		case 28:
+			t.cur.Attr.Mode &^= AttrHidden
+		case 29:
+			t.cur.Attr.Mode &^= AttrStrike
 		case 38:
 			if i+2 < len(attr) && attr[i+1] == 5 {
 				i += 2
