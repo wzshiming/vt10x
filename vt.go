@@ -60,6 +60,13 @@ type TerminalOption func(*TerminalInfo)
 type TerminalInfo struct {
 	w          io.Writer
 	cols, rows int
+	tabspaces  int
+}
+
+func WithTabSpaces(tabspaces int) TerminalOption {
+	return func(info *TerminalInfo) {
+		info.tabspaces = tabspaces
+	}
 }
 
 func WithWriter(w io.Writer) TerminalOption {
@@ -78,9 +85,10 @@ func WithSize(cols, rows int) TerminalOption {
 // New returns a new virtual terminal emulator.
 func New(opts ...TerminalOption) Terminal {
 	info := TerminalInfo{
-		w:    ioutil.Discard,
-		cols: 80,
-		rows: 24,
+		w:         ioutil.Discard,
+		tabspaces: 8,
+		cols:      80,
+		rows:      24,
 	}
 	for _, opt := range opts {
 		opt(&info)

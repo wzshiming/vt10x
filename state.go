@@ -6,10 +6,6 @@ import (
 	"sync"
 )
 
-const (
-	tabspaces = 8
-)
-
 type AttrFlag uint16
 
 const (
@@ -91,6 +87,7 @@ type State struct {
 	mu            sync.Mutex
 	changed       ChangeFlag
 	cols, rows    int
+	tabspaces     int
 	lines         []line
 	altLines      []line
 	dirty         []bool // line dirtiness
@@ -107,9 +104,10 @@ type State struct {
 	colorOverride map[Color]Color
 }
 
-func newState(w io.Writer) *State {
+func newState(info TerminalInfo) *State {
 	return &State{
-		w:             w,
+		w:             info.w,
+		tabspaces:     info.tabspaces,
 		colorOverride: make(map[Color]Color),
 	}
 }
@@ -294,7 +292,7 @@ func (t *State) reset() {
 	for i := range t.tabs {
 		t.tabs[i] = false
 	}
-	for i := tabspaces; i < len(t.tabs); i += tabspaces {
+	for i := t.tabspaces; i < len(t.tabs); i += t.tabspaces {
 		t.tabs[i] = true
 	}
 	t.top = 0
@@ -342,7 +340,7 @@ func (t *State) resize(cols, rows int) bool {
 		for i > 0 && !tabs[i] {
 			i--
 		}
-		for i += tabspaces; i < len(tabs); i += tabspaces {
+		for i += t.tabspaces; i < len(tabs); i += t.tabspaces {
 			tabs[i] = true
 		}
 	}
