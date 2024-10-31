@@ -272,14 +272,6 @@ func (t *State) setChar(c rune, attr *Glyph, x, y int) {
 	t.dirty[y] = true
 	t.lines[y][x] = *attr
 	t.lines[y][x].Char = c
-	//if t.options.BrightBold && attr.Mode&AttrBold != 0 && attr.FG < 8 {
-	if attr.Mode&AttrBold != 0 && attr.FG < 8 {
-		t.lines[y][x].FG = attr.FG + 8
-	}
-	if attr.Mode&AttrReverse != 0 {
-		t.lines[y][x].FG = attr.BG
-		t.lines[y][x].BG = attr.FG
-	}
 }
 
 func (t *State) defaultCursor() Cursor {
