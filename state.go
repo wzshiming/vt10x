@@ -214,20 +214,23 @@ func (t *State) put(c rune) {
 
 func (t *State) putTab(forward bool) {
 	x := t.cur.X
+	y := t.cur.Y
 	if forward {
 		if x == t.cols {
 			return
 		}
 		for x++; x < t.cols && !t.tabs[x]; x++ {
+			t.setChar(' ', &t.cur.Attr, x, y)
 		}
 	} else {
 		if x == 0 {
 			return
 		}
 		for x--; x > 0 && !t.tabs[x]; x-- {
+			t.setChar(' ', &t.cur.Attr, x, y)
 		}
 	}
-	t.moveTo(x, t.cur.Y)
+	t.moveTo(x, y)
 }
 
 func (t *State) newline(firstCol bool) {
