@@ -10,20 +10,24 @@ const (
 	tabspaces = 8
 )
 
-const (
-	attrReverse = 1 << iota
-	attrUnderline
-	attrBold
-	attrGfx
-	attrItalic
-	attrBlink
-	attrWrap
-)
+type AttrFlag uint16
 
 const (
-	cursorDefault = 1 << iota
-	cursorWrapNext
-	cursorOrigin
+	AttrReverse AttrFlag = 1 << iota
+	AttrUnderline
+	AttrBold
+	AttrGfx
+	AttrItalic
+	AttrBlink
+	AttrWrap
+)
+
+type CursorFlag uint16
+
+const (
+	CursorDefault CursorFlag = 1 << iota
+	CursorWrapNext
+	CursorOrigin
 )
 
 // ModeFlag represents various terminal mode states.
@@ -64,7 +68,7 @@ const (
 
 type Glyph struct {
 	Char   rune
-	Mode   int16
+	Mode   AttrFlag
 	FG, BG Color
 }
 
@@ -73,7 +77,7 @@ type line []Glyph
 type Cursor struct {
 	Attr  Glyph
 	X, Y  int
-	State uint8
+	State CursorFlag
 }
 
 type parseState func(c rune)
@@ -258,7 +262,7 @@ var gfxCharTable = [62]rune{
 }
 
 func (t *State) setChar(c rune, attr *Glyph, x, y int) {
-	if attr.Mode&attrGfx != 0 {
+	if attr.Mode&AttrGfx != 0 {
 		if c >= 0x41 && c <= 0x7e && gfxCharTable[c-0x41] != 0 {
 			c = gfxCharTable[c-0x41]
 		}
@@ -267,11 +271,11 @@ func (t *State) setChar(c rune, attr *Glyph, x, y int) {
 	t.dirty[y] = true
 	t.lines[y][x] = *attr
 	t.lines[y][x].Char = c
-	//if t.options.BrightBold && attr.Mode&attrBold != 0 && attr.FG < 8 {
-	if attr.Mode&attrBold != 0 && attr.FG < 8 {
+	//if t.options.BrightBold && attr.Mode&AttrBold != 0 && attr.FG < 8 {
+	if attr.Mode&AttrBold != 0 && attr.FG < 8 {
 		t.lines[y][x].FG = attr.FG + 8
 	}
-	if attr.Mode&attrReverse != 0 {
+	if attr.Mode&AttrReverse != 0 {
 		t.lines[y][x].FG = attr.BG
 		t.lines[y][x].BG = attr.FG
 	}
@@ -385,7 +389,7 @@ func (t *State) clearAll() {
 }
 
 func (t *State) moveAbsTo(x, y int) {
-	if t.cur.State&cursorOrigin != 0 {
+	if t.cur.State&CursorOrigin != 0 {
 		y += t.top
 	}
 	t.moveTo(x, y)
@@ -393,7 +397,7 @@ func (t *State) moveAbsTo(x, y int) {
 
 func (t *State) moveTo(x, y int) {
 	var miny, maxy int
-	if t.cur.State&cursorOrigin != 0 {
+	if t.cur.State&CursorOrigin != 0 {
 		miny = t.top
 		maxy = t.bottom
 	} else {
@@ -403,7 +407,7 @@ func (t *State) moveTo(x, y int) {
 	x = clamp(x, 0, t.cols-1)
 	y = clamp(y, miny, maxy)
 	t.changed |= ChangedScreen
-	t.cur.State &^= cursorWrapNext
+	t.cur.State &^= CursorWrapNext
 	t.cur.X = x
 	t.cur.Y = y
 }
@@ -509,9 +513,9 @@ func (t *State) setMode(priv bool, set bool, args []int) {
 				}
 			case 6: // DECOM - origin
 				if set {
-					t.cur.State |= cursorOrigin
+					t.cur.State |= CursorOrigin
 				} else {
-					t.cur.State &^= cursorOrigin
+					t.cur.State &^= CursorOrigin
 				}
 				t.moveAbsTo(0, 0)
 			case 7: // DECAWM - auto wrap
@@ -611,29 +615,29 @@ func (t *State) setAttr(attr []int) {
 		a := attr[i]
 		switch a {
 		case 0:
-			t.cur.Attr.Mode &^= attrReverse | attrUnderline | attrBold | attrItalic | attrBlink
+			t.cur.Attr.Mode &^= AttrReverse | AttrUnderline | AttrBold | AttrItalic | AttrBlink
 			t.cur.Attr.FG = DefaultFG
 			t.cur.Attr.BG = DefaultBG
 		case 1:
-			t.cur.Attr.Mode |= attrBold
+			t.cur.Attr.Mode |= AttrBold
 		case 3:
-			t.cur.Attr.Mode |= attrItalic
+			t.cur.Attr.Mode |= AttrItalic
 		case 4:
-			t.cur.Attr.Mode |= attrUnderline
+			t.cur.Attr.Mode |= AttrUnderline
 		case 5, 6: // slow, rapid blink
-			t.cur.Attr.Mode |= attrBlink
+			t.cur.Attr.Mode |= AttrBlink
 		case 7:
-			t.cur.Attr.Mode |= attrReverse
+			t.cur.Attr.Mode |= AttrReverse
 		case 21, 22:
-			t.cur.Attr.Mode &^= attrBold
+			t.cur.Attr.Mode &^= AttrBold
 		case 23:
-			t.cur.Attr.Mode &^= attrItalic
+			t.cur.Attr.Mode &^= AttrItalic
 		case 24:
-			t.cur.Attr.Mode &^= attrUnderline
+			t.cur.Attr.Mode &^= AttrUnderline
 		case 25, 26:
-			t.cur.Attr.Mode &^= attrBlink
+			t.cur.Attr.Mode &^= AttrBlink
 		case 27:
-			t.cur.Attr.Mode &^= attrReverse
+			t.cur.Attr.Mode &^= AttrReverse
 		case 38:
 			if i+2 < len(attr) && attr[i+1] == 5 {
 				i += 2
