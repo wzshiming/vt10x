@@ -223,6 +223,7 @@ func (t *State) putTab(forward bool) {
 		if x == t.cols {
 			return
 		}
+		t.setChar(' ', &t.cur.Attr, x, y)
 		for x++; x < t.cols && !t.tabs[x]; x++ {
 			t.setChar(' ', &t.cur.Attr, x, y)
 		}
@@ -230,6 +231,7 @@ func (t *State) putTab(forward bool) {
 		if x == 0 {
 			return
 		}
+		t.setChar(' ', &t.cur.Attr, x, y)
 		for x--; x > 0 && !t.tabs[x]; x-- {
 			t.setChar(' ', &t.cur.Attr, x, y)
 		}
